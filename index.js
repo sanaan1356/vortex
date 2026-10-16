@@ -27,6 +27,8 @@ const PREFIX = "c!";
 const PORT = process.env.PORT || 3000;
 const DATA_FILE = path.join(__dirname, "data.json");
 
+const app = express();
+app.use(express.json());
 const STAFF_ROLES = [
   { name: "Leader of Staff", id: "1543659012921237555" },
   { name: "Head Admin", id: "1549070828954456134" },
