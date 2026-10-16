@@ -751,8 +751,100 @@ client.on(Events.InteractionCreate, async interaction => {
         });
       }
 
-      // ENTER GIVEAWAY
+         // ENTER GIVEAWAY
       if (action === "vortex_enter") {
         if (giveaway.ended || giveaway.endAt <= Date.now()) {
           return interaction.reply({
             content: "❌ This giveaway has ended.",
+            ephemeral: true
+          });
+        }
+
+        const member = interaction.member;
+        const userId = interaction.user.id;
+
+        // Check required roles
+        const memberRoles = member.roles.cache;
+        const hasRequiredRole =
+          !giveaway.requiredRoles ||
+          giveaway.requiredRoles.length === 0 ||
+          giveaway.requiredRoles.some(roleId => memberRoles.has(roleId));
+
+        const canBypass =
+          giveaway.bypassRole &&
+          memberRoles.has(giveaway.bypassRole);
+
+        if (!hasRequiredRole && !canBypass) {
+          return interaction.reply({
+            content: "❌ You don't have the required role to enter.",
+            ephemeral: true
+          });
+        }
+
+        // Check whether already entered
+        giveaway.entries ??= {};
+
+        if (giveaway.entries[userId]) {
+          return interaction.reply({
+            content: "❌ You have already entered this giveaway.",
+            ephemeral: true
+          });
+        }
+
+        // Calculate entries
+        let extraEntries = 0;
+
+        if (giveaway.extraEntryRoles) {
+          for (const item of giveaway.extraEntryRoles) {
+            if (memberRoles.has(item.roleId)) {
+              extraEntries += Number(item.entries || 0);
+            }
+          }
+        }
+
+        giveaway.entries[userId] = {
+          entries: 1 + extraEntries,
+          enteredAt: Date.now()
+        };
+
+        saveData();
+
+        return interaction.reply({
+          content: `✅ You entered the giveaway with **${1 + extraEntries} entries**!`,
+          ephemeral: true
+        });
+      }
+
+      // Unknown button
+      return interaction.reply({
+        content: "❌ Unknown giveaway action.",
+        ephemeral: true
+      });
+    }
+
+    // Handle other interactions here if your original code had them.
+  } catch (error) {
+    console.error("Interaction error:", error);
+
+    if (interaction.isRepliable() && !interaction.replied && !interaction.deferred) {
+      await interaction.reply({
+        content: "❌ Something went wrong. Please try again.",
+        ephemeral: true
+      }).catch(() => {});
+    }
+  }
+});
+
+// Start dashboard
+app.listen(PORT, "0.0.0.0", () => {
+  console.log("VORTEX Dashboard running on port " + PORT);
+});
+
+// Start bot
+if (!process.env.DISCORD_TOKEN) {
+  console.error("Missing DISCORD_TOKEN environment variable.");
+} else {
+  client.login(process.env.DISCORD_TOKEN).catch(error => {
+    console.error("Discord login failed:", error);
+  });
+}
