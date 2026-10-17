@@ -596,14 +596,14 @@ client.on(Events.InteractionCreate, async interaction => {
         const durationText = interaction.options.getString("duration");
         const duration = parseDuration(durationText);
         const winnerCount = interaction.options.getInteger("winners");
-        const channel = interaction.options.getChannel("channel");
+      const channel = interaction.options.getChannel("channel");
 
-        if (!duration) {
-          return interaction.reply({
-            content: "❌ Invalid duration. Use formats like `10m`, `2h`, or `1d`.",
-            ephemeral: true
-          });
-        }
+if (!duration) {
+  return interaction.reply({
+    content: "❌ Invalid duration. Use formats like `10m`, `2h`, or `1d`.",
+    ephemeral: true
+  });
+}
 
         if (duration > 30 * 24 * 60 * 60 * 1000) {
           return interaction.reply({
